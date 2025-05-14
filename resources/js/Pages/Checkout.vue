@@ -2,7 +2,7 @@
 <script setup>
 import AppLayout from '@/Layouts/PublicAppLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
     cart: Object,
@@ -53,6 +53,34 @@ const emptyCart = () => {
             // Handle success if needed
         }
     });
+};
+
+const showWhatsappModal = ref(false);
+
+onMounted(() => {
+    if (!props.cart?.seller_whatsapp) {
+        showWhatsappModal.value = true;
+    }
+});
+
+const sendOrderToWhatsApp = () => {
+    if (!props.cart?.items || !props.cart?.seller_whatsapp) {
+        showWhatsappModal.value = true;
+        return;
+    }
+
+    let message = `🛒 New Order Request:\n\n`;
+
+    props.cart.items.forEach(item => {
+        message += `📦 ${item.product.title} x${item.quantity} = ${formatPrice(item.product.price * item.quantity)}\n`;
+    });
+
+    message += `\n💰 Total: ${formatPrice(total.value)}`;
+
+    const phone = props.cart.seller_whatsapp.replace(/^0/, '+98'); // تبدیل 0 به +98
+    const encodedMessage = encodeURIComponent(message);
+
+    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, '_blank');
 };
 </script>
 
@@ -122,10 +150,10 @@ const emptyCart = () => {
                                     <p class="text-lg font-semibold">
                                         Total: {{ formatPrice(total) }}
                                     </p>
-                                    <Link :href="route('checkout.payment')" 
-                                          class="mt-4 inline-block bg-indigo-600 text-white py-2 px-6 rounded-md hover:bg-indigo-700">
-                                        Proceed to Payment
-                                    </Link>
+                                    <button @click="sendOrderToWhatsApp"
+                                            class="mt-4 inline-block bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700">
+                                        Send Order via WhatsApp
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -139,6 +167,18 @@ const emptyCart = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- WhatsApp Not Available Modal -->
+        <div v-if="showWhatsappModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md text-center">
+                <h2 class="text-lg font-semibold mb-4">Seller WhatsApp Not Available</h2>
+                <p class="mb-4">The seller has not provided their WhatsApp number yet. Please try again later or contact support.</p>
+                <button @click="showWhatsappModal = false"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                    OK
+                </button>
             </div>
         </div>
     </AppLayout>

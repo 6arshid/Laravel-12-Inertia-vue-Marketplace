@@ -11,43 +11,45 @@ use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    public function index()
-    {
-        $cart = auth()->user()->cart()
-            ->with([
-                'items.product.user',
-                'items.product.mainImage',
-                'seller'
-            ])
-            ->first();
-    
-        return Inertia::render('Checkout', [
-            'cart' => $cart ? [
-                'id' => $cart->id,
-                'seller_id' => $cart->seller_id,
-                'seller_name' => $cart->seller->name,
-                'items' => $cart->items->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'quantity' => $item->quantity,
-                        'product' => [
-                            'id' => $item->product->id,
-                            'title' => $item->product->title,
-                            'price' => $item->product->price,
-                            'main_image' => $item->product->mainImage ? [
-                                'image_path' => $item->product->mainImage->image_path
-                            ] : null,
-                            'user' => [
-                                'name' => $item->product->user->name
-                            ]
+public function index()
+{
+    $cart = auth()->user()->cart()
+        ->with([
+            'items.product.user',
+            'items.product.mainImage',
+            'seller'
+        ])
+        ->first();
+
+    return Inertia::render('Checkout', [
+        'cart' => $cart ? [
+            'id' => $cart->id,
+            'seller_id' => $cart->seller_id,
+            'seller_name' => $cart->seller->name,
+            'seller_whatsapp' => $cart->seller->whatsapp, 
+            'items' => $cart->items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'quantity' => $item->quantity,
+                    'product' => [
+                        'id' => $item->product->id,
+                        'title' => $item->product->title,
+                        'price' => $item->product->price,
+                        'main_image' => $item->product->mainImage ? [
+                            'image_path' => $item->product->mainImage->image_path
+                        ] : null,
+                        'user' => [
+                            'name' => $item->product->user->name
                         ]
-                    ];
-                }),
-                'created_at' => $cart->created_at,
-                'updated_at' => $cart->updated_at,
-            ] : null,
-        ]);
-    }
+                    ]
+                ];
+            }),
+            'created_at' => $cart->created_at,
+            'updated_at' => $cart->updated_at,
+        ] : null,
+    ]);
+}
+
 
     public function store(Product $product)
     {
